@@ -1,76 +1,34 @@
 # Practical 4: 0/1 Knapsack (Dynamic Programming)
 
-def build_knapsack_dp(values, weights, n, capacity):
-    dp = [[0 for _ in range(capacity + 1)] for _ in range(n + 1)]
+def knapsack(weights, profits, capacity):
+    n = len(weights)
+    dp = [[0] * (capacity + 1) for _ in range(n + 1)]
 
-    for i in range(n + 1):
-        for w in range(capacity + 1):
-            if i == 0 or w == 0:
-                dp[i][w] = 0
-            elif weights[i - 1] <= w:
-                dp[i][w] = max(
-                    values[i - 1] + dp[i - 1][w - weights[i - 1]],
-                    dp[i - 1][w]
-                )
+    # Build DP table
+    for i in range(1, n + 1):  # Items
+        for w in range(capacity + 1):  # Capacity from 0 to W
+            if weights[i-1] > w:  # If item is too heavy, exclude it
+                dp[i][w] = dp[i-1][w]
             else:
-                dp[i][w] = dp[i - 1][w]
+                dp[i][w] = max(dp[i-1][w], profits[i-1] + dp[i-1][w - weights[i-1]])
 
-    return dp
+    # Find selected items
+    w = capacity
+    selected_items = []
+    for i in range(n, 0, -1):
+        if dp[i][w] != dp[i-1][w]:  # If the value changed, the item was included
+            selected_items.append(i-1)  # Store item index
+            w -= weights[i-1]
 
+    selected_items.reverse()  # To get items in order
 
-def print_dp_table(dp, n, capacity):
-    print("\nDP Table:")
-    print("   ", end="")
-    for w in range(capacity + 1):
-        print(f"{w:4}", end="")
-    print()
+    return dp[n][capacity], selected_items
 
-    for i in range(n + 1):
-        print(f"{i:2} ", end="")
-        for w in range(capacity + 1):
-            print(f"{dp[i][w]:4}", end="")
-        print()
+# Example usage:
+weights = [3, 2, 4, 5, 1]
+profits = [50, 40, 70, 80, 10]  
+capacity = 7
 
-
-values = []
-weights = []
-n = 0
-
-while True:
-    print("\n=== 0/1 Knapsack Menu ===")
-    print("1. Enter Items")
-    print("2. Solve 0/1 Knapsack")
-    print("3. Exit")
-
-    choice = int(input("Enter your choice: "))
-
-    if choice == 1:
-        n = int(input("Enter number of items: "))
-        values = []
-        weights = []
-
-        for i in range(n):
-            value = int(input(f"Item {i+1} value: "))
-            weight = int(input(f"Item {i+1} weight: "))
-            values.append(value)
-            weights.append(weight)
-
-    elif choice == 2:
-        if n == 0:
-            print("Please enter items first!")
-            continue
-
-        capacity = int(input("Enter knapsack capacity: "))
-
-        dp = build_knapsack_dp(values, weights, n, capacity)
-        print_dp_table(dp, n, capacity)
-
-        print("\nMaximum value that can be put in knapsack:",
-              dp[n][capacity])
-
-    elif choice == 3:
-        print("Exiting program. Goodbye!")
-        break
-
-    else:
-        print("Invalid choice!")
+max_profit, items = knapsack(weights, profits, capacity)
+print("Maximum Profit:", max_profit)
+print("Items in Knapsack:", items)
